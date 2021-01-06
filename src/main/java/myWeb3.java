@@ -1,3 +1,6 @@
+import contract.Abi_manage;
+import contract.Abi_secret;
+import contract.Abi_storage;
 import contract.Abi_table;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
@@ -12,6 +15,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -27,12 +31,26 @@ public class myWeb3 {
     private Admin w3;
     private String url = "https://ropsten.infura.io/v3/83b3315113a246e88abb1268847b4a5b";
 
+    private Abi_table tableContract;
+    private Abi_manage manageContract;
+    private Abi_secret secretContract;
+    private Abi_storage storageContract;
+
+
     public myWeb3(){
         w3 = Admin.build(new HttpService(url));
-    }
+        //ContractGasProvider provider  = new DefaultGasProvider();
+        ContractGasProvider provider = new StaticGasProvider(new BigInteger("100000"),new BigInteger("200000"));
+        Credentials user = Credentials.create("0d64c5cd990153ce7d79ab5a0c4255b9f34ea17862ded1bd53f4408eb6ebe4d9");
+        tableContract = Abi_table.load("0x489F157C67583cF895F9011783422f421F8D85bD",
+                w3, user, provider);
+        manageContract = Abi_manage.load("0x52B49a8DF0F9A03C0a35BC5c8Db3e7888B60E400",
+                w3, user, provider);
+        secretContract = Abi_secret.load("0xCA0D34C770835A58340CC7731b484c0Ae1e9a2d6",
+                w3, user, provider);
+        storageContract = Abi_storage.load("0x26AAA1C996324a56F2755726cAC15FEaA618FD21",
+                w3, user, provider);
 
-    public myWeb3(String new_url){
-        w3 = Admin.build(new HttpService(new_url));
     }
 
     public String transaction(String from , String privateKey , String to) throws ExecutionException, InterruptedException {
@@ -53,19 +71,47 @@ public class myWeb3 {
         return nonce;
     }
 
-    public void callContract() throws Exception {
-        Credentials credentials = Credentials.create("7b4c51a5ccd307aa0cb5c0577744d3c8280916d4cb0552e1b2d10f42a000206f");
-        ContractGasProvider provider = new DefaultGasProvider();
-        Abi_table table = Abi_table.load("0x489F157C67583cF895F9011783422f421F8D85bD"
-                ,w3, credentials, provider);
-        System.out.println("result:" + table.scecrtKeyContractAddress().send());
+    public String getContractAddress(String contractName) throws Exception {
+        String address = "" ;
+        switch (contractName){
+            case "storage":address = tableContract.dataStorageContractAddress().send();
+                break;
+            case "manage": address = tableContract.dataManageContractAddress().send();
+                break;
+            case "secret": address = tableContract.scecrtKeyContractAddress().send();
+        }
+        return address;
     }
 
-    public void useContact() throws Exception {
-        /*Credentials credentials = Credentials.create("7b4c51a5ccd307aa0cb5c0577744d3c8280916d4cb0552e1b2d10f42a000206f");
-        ContractGasProvider provider = new StaticGasProvider(new BigInteger("100000"),new BigInteger("200000"));
-        helloContract contract = helloContract.load("0xBa1Be0a85734CEbaEad994662C762Da40b40cb3b",
-                w3, credentials, provider);
-        System.out.println("result:" + contract.transaction("helo!!").send());*/
+    public String getUserDHkey(String address, String dataName) throws Exception {
+        String key = secretContract.getUser_DHKey(address, dataName).send();
+        return key;
     }
+
+    public String getUserData(String address , String dataName) throws Exception {
+        String data = storageContract.getUserData(address, dataName).send();
+        return data;
+    }
+
+    public String getPublicData(String dataName) throws Exception {
+        String content = storageContract.getPublicData(dataName).send();
+        return content;
+    }
+
+    public String getPublicDataDhKey(String dataName) throws Exception {
+        String key = secretContract.getManage_DHKey(dataName).send();
+        return key;
+    }
+
+    public String setUserData(String dataName, String content) throws Exception {
+        TransactionReceipt hash = manageContract.setUserData(dataName, content).send();
+        return hash.getTransactionHash();
+    }
+
+    public String setUserDHkey(String dataName, String DHkey) throws Exception {
+        TransactionReceipt hash = secretContract.addUser_DHKey(dataName, DHkey).send();
+        return hash.getTransactionHash();
+    }
+
+
 }

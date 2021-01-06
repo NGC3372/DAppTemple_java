@@ -11,21 +11,17 @@ public class run {
 
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        /*myWeb3 w3 = new myWeb3();
-
+        myWeb3 w3 = new myWeb3();
+        String result = null;
         try {
-            w3.callContract();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-        Admin w3 = Admin.build(new HttpService("https://ropsten.infura.io/v3/83b3315113a246e88abb1268847b4a5b"));
-        ContractGasProvider provider = new DefaultGasProvider();
-        Credentials credentials = Credentials.create("7b4c51a5ccd307aa0cb5c0577744d3c8280916d4cb0552e1b2d10f42a000206f");
-        Abi_table table = Abi_table.load("0x489F157C67583cF895F9011783422f421F8D85bD"
-                ,w3, credentials, provider);
-        try {
-            String result = table.scecrtKeyContractAddress().send();
-            System.out.println("result:" + result);
+            //result = w3.getContractAddress("manage");
+            //result = w3.setUserData("hello","QmQy6xmJhrcC5QLboAcGFcAE1tC8CrwDVkrHdEYJkLscrQ");
+            //result = w3.getUserData("0x61bEa2058e8d5a01F1f9898E49F53Cc3cc8E6520", "hello");
+            //result = w3.getPublicData("data1");
+            result = w3.getPublicDataDhKey("dataTest");
+            //result = w3.setUserDHkey("hello", "QmbsPcceqURmvYHWFHjo4PfmGbRgEaCBVc6BoNjSHF4Rru");
+            //result = w3.getUserDHkey("0x61bEa2058e8d5a01F1f9898E49F53Cc3cc8E6520","hello");
+            System.out.println(result);
         } catch (Exception e) {
             e.printStackTrace();
         }
